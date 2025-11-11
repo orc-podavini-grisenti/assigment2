@@ -179,8 +179,9 @@ def define_terminal_cost_and_constraints(opti, X, S, c_path, r_path, w_final):
 
     cost = 0
     
-    # For Question 2, you will add the cyclic cost here
-    # cost += w_final * cs.sumsqr(X[-1] - x_init) 
+    # Q2 Addition: 
+    # terminal cost that penalizes the distance between the initial and final state
+    cost += w_final * cs.sumsqr(X[-1] - x_init) 
     
     return cost
 
@@ -200,8 +201,9 @@ def create_and_solve_ocp(N, nx, nq, lbx, ubx, dt, x_init,
 
     t0 = time.time()
     sol = opti.solve()
-    print(f"Solver time: {time.time() - t0:.2f}s")
-    return sol, X, U, S, W
+    solver_time = time.time() - t0
+    print(f"Solver time: {solver_time:.2f}s")
+    return sol, X, U, S, W, solver_time
 
 
 
@@ -235,11 +237,12 @@ if __name__ == "__main__":
     
     input("Press ENTER to continue...")
 
-    log_w_v, log_w_a, log_w_w, log_w_final = -3, -3, -2, 0
+
+    log_w_v, log_w_a, log_w_w, log_w_final = -3, -3, -2, 3
     log_w_p = 2 #Log of trajectory tracking cost 
 
 
-    sol, X, U, S, W = create_and_solve_ocp(
+    sol, X, U, S, W , solver_timer = create_and_solve_ocp(
         N, nx, nq, lbx, ubx, dt, x_init, c_path, r_path,
         10**log_w_v, 10**log_w_a, 10**log_w_w, 10**log_w_final,
         tau_min, tau_max
@@ -250,13 +253,12 @@ if __name__ == "__main__":
     )
 
     print("Displaying robot motion...")
-    for i in range(3):
-        display_motion(q_sol, ee_des)
+    display_motion(q_sol, ee_des)
 
     # Plot results
-    save_path = './results/Q1'
-    plot_result(N, dt, s_sol, ee_des, ee, dq_sol, q_sol, tau, w_sol, save_dir=save_path, marker_size=12)
+    save_path = './results/Q2/log_w_final_3'
+    plot_result(N, dt, s_sol, ee_des, ee, dq_sol, q_sol, tau, w_sol, save_dir = save_path, marker_size=12)
 
     # Summary results
     filename = save_path + '/summary.txt'
-    save_tracking_summary(q_sol, tau, ee, ee_des, s_sol, dt, N, joints_name_list, tau_min, tau_max, filename)
+    save_tracking_summary(q_sol, tau, ee, ee_des, s_sol, dt, N, solver_timer, joints_name_list, tau_min, tau_max, filename)

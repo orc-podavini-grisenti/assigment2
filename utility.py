@@ -70,7 +70,7 @@ def extract_solution(sol, X, U, S, W, N, nq, c_path, r_path, inv_dyn, fk):
 
 
 
-def save_tracking_summary(q_sol, tau, ee, ee_des, s_sol, dt, N, 
+def save_tracking_summary(q_sol, tau, ee, ee_des, s_sol, dt, N, solver_timer, 
                             joint_names=None, tau_min=None, tau_max=None, 
                             filename='tracking_summary.csv'):
     """
@@ -84,6 +84,7 @@ def save_tracking_summary(q_sol, tau, ee, ee_des, s_sol, dt, N,
         s_sol (np.ndarray): Trajectory parameter evolution, shape (N+1,)
         dt (float): Time step duration in seconds
         N (int): Number of time steps
+        solver_timer (float): Time occured to the solver to solve the optimal problem
         joint_names (list, optional): List of joint names. If None, uses generic names.
         tau_min: Torque min limits [Nm]
         tau_max: Torque min limits [Nm]
@@ -139,6 +140,17 @@ def save_tracking_summary(q_sol, tau, ee, ee_des, s_sol, dt, N,
     # PATH PARAMETER ANALYSIS
     s_completion = s_sol[-1]  # Should be close to 1.0 for complete path
 
+
+    # CYCLIC MOTION ANALYSIS (Initial vs Final Configuration)
+    q_initial = q_sol[:, 0]   # Initial joint positions
+    q_final = q_sol[:, -1]    # Final joint positions
+    
+    # Joint position errors
+    q_error = q_final - q_initial  # Error per joint [rad]
+    q_error_abs = np.abs(q_error)  # Absolute error per joint
+    q_error_norm = np.linalg.norm(q_error)  # Euclidean norm of position error
+    q_error_mean = np.mean(q_error_abs)  # Mean absolute error
+
     
     # WRITE TXT SUMMARY
     with open(filename, 'w') as txtfile:
@@ -158,6 +170,7 @@ def save_tracking_summary(q_sol, tau, ee, ee_des, s_sol, dt, N,
         txtfile.write(f'{"Time step size":<40} {dt:>15.6f} {"s":>10}\n')
         txtfile.write(f'{"Number of joints":<40} {nq:>15} {"-":>10}\n')
         txtfile.write(f'{"Path completion":<40} {s_completion:>15.4f} {"-":>10}\n')
+        txtfile.write(f'{"Solver Time":<40} {solver_timer:>15.4f} {"s":>10}\n')
         txtfile.write('\n\n')
         
         # End-Effector Tracking Performance
@@ -171,6 +184,26 @@ def save_tracking_summary(q_sol, tau, ee, ee_des, s_sol, dt, N,
         txtfile.write(f'{"Std position error":<40} {ee_error_std*1000:>15.4f} {"mm":>10}\n')
         txtfile.write(f'{"Final position error":<40} {ee_error_final*1000:>15.4f} {"mm":>10}\n')
         txtfile.write('\n\n')
+
+         # Cyclic Motion Analysis
+        txtfile.write('CYCLIC MOTION ANALYSIS (Initial vs Final Configuration)\n')
+        txtfile.write('-' * 80 + '\n')
+        txtfile.write(f'{"Metric":<40} {"Value":>15} {"Unit":>10}\n')
+        txtfile.write('-' * 80 + '\n')
+        txtfile.write(f'{"Total joint error (norm)":<40} {np.rad2deg(q_error_norm):>15.4f} {"deg":>10}\n')
+        txtfile.write(f'{"Mean absolute joint error":<40} {np.rad2deg(q_error_mean):>15.4f} {"deg":>10}\n')
+        txtfile.write('\n')
+        
+        # Per-joint cyclic error details
+        txtfile.write('Per-Joint Configuration Error:\n')
+        txtfile.write(f'{"Joint Name":<20} {"Initial [deg]":>15} {"Final [deg]":>15} {"Error [deg]":>15}\n')
+        txtfile.write('-' * 80 + '\n')
+        for i in range(nq):
+            txtfile.write(f'{joint_names[i]:<20} '
+                         f'{np.rad2deg(q_initial[i]):>15.4f} '
+                         f'{np.rad2deg(q_final[i]):>15.4f} '
+                         f'{np.rad2deg(q_error[i]):>15.4f}\n')
+        txtfile.write('\n')
         
         # Joint Limit Analysis
         txtfile.write('JOINT LIMIT ANALYSIS\n')
