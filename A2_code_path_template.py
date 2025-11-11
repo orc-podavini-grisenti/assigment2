@@ -12,36 +12,24 @@ from orc.utils.robot_wrapper import RobotWrapper
 from orc.utils.robot_simulator import RobotSimulator
 from orc.utils.viz_utils import addViewerSphere, applyViewerConfiguration
 
-
-# ====================== Simple plotting utility ======================
-def plot_infinity(t_init, t_final):
-    r = 0.1
-    t = np.linspace(t_init, t_final, 300)
-    x = r * np.cos(2*np.pi*t)
-    y = r * 0.5*np.sin(4*np.pi*t)
-    plt.figure(figsize=(10, 4))
-    plt.plot(x, y, 'x')
-    plt.xlim([-0.11, 0.11])
-    plt.ylim([-0.06, 0.06])
-    plt.title("Infinity-shaped path")
-    plt.grid(True)
-    plt.show()
+from utility import extract_solution, save_tracking_summary
+from plotting_utility import plot_infinity, plot_result
 
 
 # ====================== Robot and Dynamics Setup ======================
 robot = load("ur5")
 joints_name_list = [s for s in robot.model.names[1:]]
-nq = len(joints_name_list)
-nx = 2 * nq
+nq = len(joints_name_list)                                  # nq = number of joints
+nx = 2 * nq                                                 # nx = state space dimension, a joint state x = [q, dq], 2 variable for each joint
 
-dt = 0.02
-N = 100
+dt = 0.02                                                   # dt = time step
+N = 100                                                     # N = number of steps
 q0 = np.zeros(nq)
 dq0 = np.zeros(nq)
 x_init = np.concatenate([q0, dq0])
 w_max = 5
-frame_name = "ee_link"
-r_path = 0.2
+frame_name = "ee_link"                                      # end effecto frame name
+r_path = 0.2                                                # path radius
 
 # CasADi symbolic variables
 q = cs.SX.sym('q', nq)
@@ -94,67 +82,92 @@ def create_decision_variables(N, nx, nu, lbx, ubx):
 def define_running_cost_and_dynamics(opti, X, U, S, W, N, dt, x_init,
                                      c_path, r_path, w_v, w_a, w_w,
                                      tau_min, tau_max):
+    '''
+    Define running cost and dynamics constraints for path tracking with progress variable s(t).
+
+    Args:
+        opti (obj): casadi optimizer
+        X (list): State matrix, shape (N+1, nx).
+        U (list): Control matrix, shape (N, nu).
+        S (list): State matrix, shape (N+1, 1), s ∈ [0,1].
+        W (list): Path progression velocity, shape (N+1, 1).
+        N (int): Number of time steps.
+        dt (float): Time step size. 
+        x_init (array-like): Initial state of the system, shape (nx,).
+        c_path (array-like): Coordinates of the center of the path [c_x, c_y, c_z].
+        r_path (float): Radius or scale factor of the path trajectory.
+        w_v: Weight of the velocity in cost function
+        w_a: Weight of the acceleration in cost function
+        w_w: Weight of the weighting in cost function
+        tau_min (list): Minimum allowable joint torques (control limits).
+        tau_max (list): Maximum allowable joint torques (control limits).
     
-    # TODO: Constrain the initial state X[0] to be equal to the initial condition x_init
+    Returns:
+        cost (casadi.MX/DM): The total running cost expression, including tracking, actuation, and path progression terms.
+    '''
+
+    # Initial and Terminal Constraints
+    # - x(0) = x_init       Constrain the initial state X[0] to be equal to the initial condition x_init 
+    # - s(0) = 0            Constraint the initial the path variable S[0] to 0.0
+    # - s(N) = 1            Constrain the final path variable S[-1] to be 1.0
     opti.subject_to(X[0] == x_init)
-    
-
-    # TODO: Initialize the path variable S[0] to 0.0
     opti.subject_to(S[0] == 0.0)
-    
-
-    # TODO: Constrain the final path variable S[-1] to be 1.0
     opti.subject_to(S[-1] == 1.0)
 
     cost = 0.0
     for k in range(N):
-        # TODO: Compute the end-effector position using forward kinematics
+        # Compute the end-effector position using forward kinematics
         q_k = X[k][0:nq] 
         ee_pos = fk(q_k)
         
-
-        # TODO: Constrain ee_pos to lie on the desired path in x, y, z
-        s_k = S[k] 
-        p_x = c_path[0] + r_path * cs.cos(2 * cs.pi * s_k) 
-        p_y = c_path[1] + 0.5 * r_path * cs.sin(4 * cs.pi * s_k) 
-        p_z = c_path[2] 
+        # Path Constraint
+        # - y(q_k) = p(s_k)     Constrain ee_pos to lie on the desired path in x, y, z
+        s_k = S[k]              # current path progress
+        # derive end effectore position from the path progress
+        p_x = c_path[0] + r_path * cs.cos(2 * cs.pi * s_k)          # p_x(s)=c_x ​+ rcos(2πs)
+        p_y = c_path[1] + 0.5 * r_path * cs.sin(4 * cs.pi * s_k)    # p_y(s)=c_y+0.5rsine(4πs)
+        p_z = c_path[2]                                             # p_z(s)=c_z
         p_s = cs.vertcat(p_x, p_y, p_z) 
         opti.subject_to(ee_pos == p_s)
        
 
-        # TODO: Add velocity tracking cost term
-        cost += w_v * cs.sumsqr(X[k][nq:])
+        # Cost Terms 
+        # w_v*∥dq_k∥^2 + w_a*∥u_k∥^2 + w_w*∥w_k∥^2 
+        cost += w_v * cs.sumsqr(X[k][nq:])      # velocity tracking cost term
+        cost += w_a * cs.sumsqr(U[k])           # actuation effort cost term
+        cost += w_w * cs.sumsqr(W[k])           # path progression speed cost term
         
 
-        # TODO: Add actuation effort cost term
-        cost += w_a * cs.sumsqr(U[k])
-
-
-        # TODO: Add path progression speed cost term
-        cost += w_w * cs.sumsqr(W[k])
-        
-
-        # TODO: Add discrete-time dynamics constraint
+        # Discrete-Time Dynamics constraints
+        # - q_k+1 = q_k + ∆t*dq_k 
+        # - dq_k+1 = dq_k + ∆t*u_k 
         x_next = X[k] + dt * f(X[k], U[k]) 
         opti.subject_to(X[k+1] == x_next)
-        
 
-        # TODO: Add path variable dynamics constraint
+
+        # Path Progression constraints
+        # - s_k+1 = s_k + ∆t*w_k
         s_next = S[k] + dt * W[k] 
         opti.subject_to(S[k+1] == s_next)
 
 
-        # TODO: Constrain the joint torques to remain within [tau_min, tau_max]
+        # Torque bounds Constra
+        # - tau_min <= τ_k <= tau_max
         tau_k = inv_dyn(X[k], U[k]) 
         opti.subject_to(opti.bounded(tau_min, tau_k, tau_max))
+
+
+        # NB: Missing Joint Position and Velocity Bounds:
+        # - q_min <= q_k <= q_max
+        # - dq_min <= dq_k <= dq_max
         
         
     return cost
 
 def define_terminal_cost_and_constraints(opti, X, S, c_path, r_path, w_final):
     # TODO: Compute the end-effector position at the final state
-    q_N = X[-1][0:nq]  # Get final joint positions from X[-1]
-    ee_pos_N = fk(q_N)
+    q_N = X[-1][0:nq]   # get final joint positions from X[-1]
+    ee_pos_N = fk(q_N)  # get final end-effector position from fk(q_N)
 
     # TODO: Constrain ee_pos to lie on the desired path in x, y, z at the end
     s_N = S[-1]  # Get final path variable S[-1]
@@ -162,17 +175,14 @@ def define_terminal_cost_and_constraints(opti, X, S, c_path, r_path, w_final):
     p_y = c_path[1] + 0.5 * r_path * cs.sin(4 * cs.pi * s_N)
     p_z = c_path[2]
     p_s_N = cs.vertcat(p_x, p_y, p_z)
-    
-    # This is the missing constraint that will fix your problem
     opti.subject_to(ee_pos_N == p_s_N)
 
     cost = 0
     
     # For Question 2, you will add the cyclic cost here
-    cost += w_final * cs.sumsqr(X[-1] - x_init) 
+    # cost += w_final * cs.sumsqr(X[-1] - x_init) 
     
     return cost
-
 
 
 def create_and_solve_ocp(N, nx, nq, lbx, ubx, dt, x_init,
@@ -194,25 +204,6 @@ def create_and_solve_ocp(N, nx, nq, lbx, ubx, dt, x_init,
     return sol, X, U, S, W
 
 
-def extract_solution(sol, X, U, S, W):
-    x_sol = np.array([sol.value(X[k]) for k in range(N + 1)]).T
-    ddq_sol = np.array([sol.value(U[k]) for k in range(N)]).T
-    s_sol = np.array([sol.value(S[k]) for k in range(N + 1)]).T
-    q_sol = x_sol[:nq, :]
-    dq_sol = x_sol[nq:, :]
-    w_sol = np.array([sol.value(W[k]) for k in range(N)]).T
-    tau = np.zeros((nq, N))
-    for i in range(N):
-        tau[:, i] = inv_dyn(x_sol[:, i], ddq_sol[:, i]).toarray().squeeze()
-    ee = np.zeros((3, N + 1))
-    for i in range(N + 1):
-        ee[:, i] = fk(x_sol[:nq, i]).toarray().squeeze()
-    ee_des = np.zeros((3, N + 1))
-    for i in range(N + 1):
-        ee_des[:, i] = np.array([c_path[0] + r_path*np.cos(2*np.pi*s_sol[i]),
-                                 c_path[1] + r_path*0.5*np.sin(4*np.pi*s_sol[i]),
-                                 c_path[2]])
-    return q_sol, dq_sol, ddq_sol, tau, ee, ee_des, s_sol, w_sol
 
 
 # ====================== Simulation and Visualization ======================
@@ -253,67 +244,19 @@ if __name__ == "__main__":
         10**log_w_v, 10**log_w_a, 10**log_w_w, 10**log_w_final,
         tau_min, tau_max
     )
-    q_sol, dq_sol, u_sol, tau, ee, ee_des, s_sol, w_sol = extract_solution(sol, X, U, S, W)
+
+    q_sol, dq_sol, u_sol, tau, ee, ee_des, s_sol, w_sol = extract_solution(
+        sol, X, U, S, W, N, nq, c_path, r_path, inv_dyn, fk 
+    )
 
     print("Displaying robot motion...")
     for i in range(3):
         display_motion(q_sol, ee_des)
 
     # Plot results
-    tt = np.linspace(0, (N + 1) * dt, N + 1)
-    plt.figure(figsize=(10, 4))
-    plt.plot([tt[0], tt[-1]], [0, 1], ':', label='straight line', alpha=0.7)
-    plt.plot(tt, s_sol, label='s')
-    plt.xlabel('Time [s]')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    save_path = './results/Q1'
+    plot_result(N, dt, s_sol, ee_des, ee, dq_sol, q_sol, tau, w_sol, save_dir=save_path, marker_size=12)
 
-    plt.figure(figsize=(10, 4))
-    plt.plot(ee_des[0,:].T, ee_des[1,:].T, 'r x', label='EE des', alpha=0.7)
-    plt.plot(ee[0,:].T, ee[1,:].T, 'k o', label='EE', alpha=0.7)
-    plt.xlabel('End-effector pos x [m]')
-    plt.ylabel('End-effector pos y [m]')
-    plt.legend()
-    plt.grid(True)
-    
-    plt.figure(figsize=(10, 4))
-    for i in range(3):
-        plt.plot(tt, ee_des[i,:].T, ':', label=f'EE des {i}', alpha=0.7)
-        plt.plot(tt, ee[i,:].T, label=f'EE {i}', alpha=0.7)
-    plt.xlabel('Time [s]')
-    plt.ylabel('End-effector pos [m]')
-    plt.legend()
-    plt.grid(True)
-
-    plt.figure(figsize=(10, 4))
-    for i in range(dq_sol.shape[0]):
-        plt.plot(tt, dq_sol[i,:].T, label=f'dq {i}', alpha=0.7)
-    plt.xlabel('Time [s]')
-    plt.ylabel('Joint velocity [rad/s]')
-    plt.legend()
-    plt.grid(True)
-
-    plt.figure(figsize=(10, 4))
-    for i in range(q_sol.shape[0]):
-        plt.plot([tt[0], tt[-1]], [q_sol[i,0], q_sol[i,0]], ':', label='straight line', alpha=0.7)
-        plt.plot(tt, q_sol[i,:].T, label=f'q {i}', alpha=0.7)
-    plt.xlabel('Time [s]')
-    plt.ylabel('Joint [rad/s]')
-    plt.legend()
-    plt.grid(True)
-
-    plt.figure(figsize=(10, 4))
-    for i in range(tau.shape[0]):
-        plt.plot(tt[:-1], tau[i,:].T, label=f'tau {i}', alpha=0.7)
-    plt.xlabel('Time [s]')
-    plt.ylabel('Joint torque [Nm]')
-    plt.legend()
-    plt.grid(True)
-
-    plt.figure(figsize=(10, 4))
-    plt.plot(tt[:-1], w_sol.T, label=f'w', alpha=0.7)
-    plt.xlabel('Time [s]')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    # Summary results
+    filename = save_path + '/summary.txt'
+    save_tracking_summary(q_sol, tau, ee, ee_des, s_sol, dt, N, joints_name_list, tau_min, tau_max, filename)
