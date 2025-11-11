@@ -96,50 +96,81 @@ def define_running_cost_and_dynamics(opti, X, U, S, W, N, dt, x_init,
                                      tau_min, tau_max):
     
     # TODO: Constrain the initial state X[0] to be equal to the initial condition x_init
+    opti.subject_to(X[0] == x_init)
     
 
     # TODO: Initialize the path variable S[0] to 0.0
+    opti.subject_to(S[0] == 0.0)
     
 
     # TODO: Constrain the final path variable S[-1] to be 1.0
-    #
+    opti.subject_to(S[-1] == 1.0)
 
     cost = 0.0
     for k in range(N):
         # TODO: Compute the end-effector position using forward kinematics
+        q_k = X[k][0:nq] 
+        ee_pos = fk(q_k)
         
 
         # TODO: Constrain ee_pos to lie on the desired path in x, y, z
+        s_k = S[k] 
+        p_x = c_path[0] + r_path * cs.cos(2 * cs.pi * s_k) 
+        p_y = c_path[1] + 0.5 * r_path * cs.sin(4 * cs.pi * s_k) 
+        p_z = c_path[2] 
+        p_s = cs.vertcat(p_x, p_y, p_z) 
+        opti.subject_to(ee_pos == p_s)
        
 
         # TODO: Add velocity tracking cost term
+        cost += w_v * cs.sumsqr(X[k][nq:])
         
 
         # TODO: Add actuation effort cost term
-        
+        cost += w_a * cs.sumsqr(U[k])
+
 
         # TODO: Add path progression speed cost term
+        cost += w_w * cs.sumsqr(W[k])
         
 
         # TODO: Add discrete-time dynamics constraint
+        x_next = X[k] + dt * f(X[k], U[k]) 
+        opti.subject_to(X[k+1] == x_next)
         
 
         # TODO: Add path variable dynamics constraint
-        
+        s_next = S[k] + dt * W[k] 
+        opti.subject_to(S[k+1] == s_next)
+
 
         # TODO: Constrain the joint torques to remain within [tau_min, tau_max]
+        tau_k = inv_dyn(X[k], U[k]) 
+        opti.subject_to(opti.bounded(tau_min, tau_k, tau_max))
         
         
     return cost
 
 def define_terminal_cost_and_constraints(opti, X, S, c_path, r_path, w_final):
     # TODO: Compute the end-effector position at the final state
-    
+    q_N = X[-1][0:nq]  # Get final joint positions from X[-1]
+    ee_pos_N = fk(q_N)
 
     # TODO: Constrain ee_pos to lie on the desired path in x, y, z at the end
-
+    s_N = S[-1]  # Get final path variable S[-1]
+    p_x = c_path[0] + r_path * cs.cos(2 * cs.pi * s_N)
+    p_y = c_path[1] + 0.5 * r_path * cs.sin(4 * cs.pi * s_N)
+    p_z = c_path[2]
+    p_s_N = cs.vertcat(p_x, p_y, p_z)
+    
+    # This is the missing constraint that will fix your problem
+    opti.subject_to(ee_pos_N == p_s_N)
 
     cost = 0
+    
+    # For Question 2, you will add the cyclic cost here
+    cost += w_final * cs.sumsqr(X[-1] - x_init) 
+    
     return cost
 
 
@@ -210,9 +241,12 @@ def display_motion(q_traj, ee_des_traj):
 if __name__ == "__main__":
     print("Plotting reference infinity curve...")
     plot_infinity(0, 1)
+    
+    input("Press ENTER to continue...")
 
     log_w_v, log_w_a, log_w_w, log_w_final = -3, -3, -2, 0
     log_w_p = 2 #Log of trajectory tracking cost 
+
 
     sol, X, U, S, W = create_and_solve_ocp(
         N, nx, nq, lbx, ubx, dt, x_init, c_path, r_path,
