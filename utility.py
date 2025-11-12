@@ -1,6 +1,6 @@
 import numpy as np
 
-def extract_solution(sol, X, U, S, W, N, nq, c_path, r_path, inv_dyn, fk):
+def extract_solution(sol, X, U, S, W, N, dt, nq, c_path, r_path, inv_dyn, fk):
     """
     Extract and process the solution from an optimal control problem for robotic trajectory tracking.
     
@@ -44,7 +44,11 @@ def extract_solution(sol, X, U, S, W, N, nq, c_path, r_path, inv_dyn, fk):
     s_sol = np.array([sol.value(S[k]) for k in range(N + 1)]).T
 
     # Extract auxiliary optimization variables
-    w_sol = np.array([sol.value(W[k]) for k in range(N)]).T
+    try:
+        w_sol = np.array([sol.value(W[k]) for k in range(N)]).T
+    except RuntimeError:
+        print("⚠️ Skipping W extraction: W not active in solution, costant value 1/N")
+        w_sol = np.full(N, 1.0 / (N * dt ))
 
     # Compute joint torques using inverse dynamics
     # For each time step, calculate the torques needed to achieve the desired accelerations

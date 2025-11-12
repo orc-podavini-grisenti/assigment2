@@ -11,6 +11,7 @@ Number of time steps                                 100          -
 Time step size                                  0.020000          s
 Number of joints                                       6          -
 Path completion                                   1.0000          -
+Solver Time                                       3.2995          s
 
 
 END-EFFECTOR TRACKING PERFORMANCE
@@ -23,6 +24,23 @@ RMS position error                                0.0000         mm
 Std position error                                0.0000         mm
 Final position error                              0.0000         mm
 
+
+CYCLIC MOTION ANALYSIS (Initial vs Final Configuration)
+--------------------------------------------------------------------------------
+Metric                                             Value       Unit
+--------------------------------------------------------------------------------
+Total joint error (norm)                         50.6260        deg
+Mean absolute joint error                        14.3939        deg
+
+Per-Joint Configuration Error:
+Joint Name             Initial [deg]     Final [deg]     Error [deg]
+--------------------------------------------------------------------------------
+shoulder_pan_joint           -0.0000          0.3426          0.3426
+shoulder_lift_joint           0.0000         20.7861         20.7861
+elbow_joint                   0.0000        -41.4927        -41.4927
+wrist_1_joint                 0.0000          3.8921          3.8921
+wrist_2_joint                -0.0000         19.8499         19.8499
+wrist_3_joint                -0.0000         -0.0000         -0.0000
 
 JOINT LIMIT ANALYSIS
 --------------------------------------------------------------------------------
