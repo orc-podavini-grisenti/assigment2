@@ -43,12 +43,19 @@ def extract_solution(sol, X, U, S, W, N, dt, nq, c_path, r_path, inv_dyn, fk):
     # Extract trajectory parameter s (ranges from 0 to 1 along the path)
     s_sol = np.array([sol.value(S[k]) for k in range(N + 1)]).T
 
-    # Extract auxiliary optimization variables
-    try:
-        w_sol = np.array([sol.value(W[k]) for k in range(N)]).T
+    # Extract delta time
+    try: 
+        dt_sol = sol.value(dt)
     except RuntimeError:
+        dt_sol = dt
+
+
+    # Extract auxiliary optimization variables
+    if W:
+        w_sol = np.array([sol.value(W[k]) for k in range(N)]).T
+    else:
         print("⚠️ Skipping W extraction: W not active in solution, costant value 1/N")
-        w_sol = np.full(N, 1.0 / (N * dt ))
+        w_sol = np.full(N, 1.0 / (N * dt_sol))
 
     # Compute joint torques using inverse dynamics
     # For each time step, calculate the torques needed to achieve the desired accelerations
@@ -69,7 +76,8 @@ def extract_solution(sol, X, U, S, W, N, dt, nq, c_path, r_path, inv_dyn, fk):
         ee_des[:, i] = np.array([c_path[0] + r_path*np.cos(2*np.pi*s_sol[i]),
                                  c_path[1] + r_path*0.5*np.sin(4*np.pi*s_sol[i]),
                                  c_path[2]])
-    return q_sol, dq_sol, ddq_sol, tau, ee, ee_des, s_sol, w_sol
+    
+    return q_sol, dq_sol, ddq_sol, tau, ee, ee_des, s_sol, w_sol, dt_sol
 
 
 

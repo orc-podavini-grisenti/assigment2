@@ -3,7 +3,7 @@ import casadi as cs
 # TRAJECTORY TRACKING THROUGH HARD CONSTRAINT 
 #               N-1
 #   min          ∑ ( w_v*∥dq_k∥^2 + w_a∥u_k∥^2 )     +     w_final*∥x(N) - x_init∥^2
-#  X,U,S        k=0
+#   X,U         k=0
 #              |--------- Running Cost ---------|        |----- Terminal Cost ------|
 #
 # subject to    - q_k+1 = q_k + ∆t*dq_k , dq_k+1 = dq_k + ∆t*u_k      ∀k ∈[0,N −1]
@@ -128,7 +128,7 @@ def hard_cyclic_trajectory_tracking(opti, X, U, S, N, dt, x_init,
 # TRAJECTORY TRACKING THROUGH SOFT CONSTRAINT - COST FUNCTION
 #               N-1
 #   min          ∑ ( w_v*∥dq_k∥^2 + w_a∥u_k∥^2 + w_p*∥y_q - p_s∥^2 )     +     w_p*∥y(q_N) - p(s_N)∥^2  + w_final*∥x(N) - x_init∥^2
-#  X,U,S        k=0
+#   X,U         k=0
 #               |---------------- Running Cost --------------------|         |------------------ Terminal Cost ------------------|
 #
 # subject to    - q_k+1 = q_k + ∆t*dq_k , dq_k+1 = dq_k + ∆t*u_k      ∀k ∈[0,N −1]

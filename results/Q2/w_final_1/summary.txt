@@ -11,17 +11,17 @@ Number of time steps                                 100          -
 Time step size                                  0.020000          s
 Number of joints                                       6          -
 Path completion                                   1.0000          -
-Solver Time                                      24.9541          s
+Solver Time                                      46.8141          s
 
 
 END-EFFECTOR TRACKING PERFORMANCE
 --------------------------------------------------------------------------------
 Metric                                             Value       Unit
 --------------------------------------------------------------------------------
-Mean position error                               0.0013         mm
-Max position error                                0.0032         mm
-RMS position error                                0.0017         mm
-Std position error                                0.0011         mm
+Mean position error                               0.0000         mm
+Max position error                                0.0001         mm
+RMS position error                                0.0000         mm
+Std position error                                0.0000         mm
 Final position error                              0.0000         mm
 
 
@@ -29,18 +29,18 @@ CYCLIC MOTION ANALYSIS (Initial vs Final Configuration)
 --------------------------------------------------------------------------------
 Metric                                             Value       Unit
 --------------------------------------------------------------------------------
-Total joint error (norm)                         12.2602        deg
-Mean absolute joint error                         3.2718        deg
+Total joint error (norm)                         35.4086        deg
+Mean absolute joint error                        11.1405        deg
 
 Per-Joint Configuration Error:
 Joint Name             Initial [deg]     Final [deg]     Error [deg]
 --------------------------------------------------------------------------------
-shoulder_pan_joint           -0.0000          0.0024          0.0024
-shoulder_lift_joint           0.0000          5.1880          5.1880
-elbow_joint                   0.0000        -10.8046        -10.8046
-wrist_1_joint                 0.0000          1.9727          1.9727
-wrist_2_joint                -0.0000         -1.6627         -1.6627
-wrist_3_joint                 0.0000         -0.0000         -0.0000
+shoulder_pan_joint           -0.0000          0.1049          0.1049
+shoulder_lift_joint           0.0000        -12.4454        -12.4454
+elbow_joint                   0.0000         26.1215         26.1215
+wrist_1_joint                 0.0000        -17.2259        -17.2259
+wrist_2_joint                -0.0000         10.9455         10.9455
+wrist_3_joint                -0.0000          0.0000          0.0000
 
 JOINT LIMIT ANALYSIS
 --------------------------------------------------------------------------------

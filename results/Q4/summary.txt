@@ -6,47 +6,47 @@ GENERAL INFORMATION
 --------------------------------------------------------------------------------
 Metric                                             Value       Unit
 --------------------------------------------------------------------------------
-Total trajectory time                             2.0200          s
+Total trajectory time                             7.6121          s
 Number of time steps                                 100          -
-Time step size                                  0.020000          s
+Time step size                                  0.075368          s
 Number of joints                                       6          -
 Path completion                                   1.0000          -
-Solver Time                                       1.9183          s
+Solver Time                                     169.9682          s
 
 
 END-EFFECTOR TRACKING PERFORMANCE
 --------------------------------------------------------------------------------
 Metric                                             Value       Unit
 --------------------------------------------------------------------------------
-Mean position error                               8.5123         mm
-Max position error                               23.3540         mm
-RMS position error                                9.7451         mm
-Std position error                                4.7444         mm
-Final position error                             22.7266         mm
+Mean position error                               0.0001         mm
+Max position error                                0.0018         mm
+RMS position error                                0.0003         mm
+Std position error                                0.0003         mm
+Final position error                              0.0000         mm
 
 
 CYCLIC MOTION ANALYSIS (Initial vs Final Configuration)
 --------------------------------------------------------------------------------
 Metric                                             Value       Unit
 --------------------------------------------------------------------------------
-Total joint error (norm)                         28.1710        deg
-Mean absolute joint error                         8.3691        deg
+Total joint error (norm)                         79.6027        deg
+Mean absolute joint error                        27.9330        deg
 
 Per-Joint Configuration Error:
 Joint Name             Initial [deg]     Final [deg]     Error [deg]
 --------------------------------------------------------------------------------
-shoulder_pan_joint           -0.0000         -1.4345         -1.4345
-shoulder_lift_joint          -0.0000        -11.3742        -11.3742
-elbow_joint                   0.0000         23.3619         23.3619
-wrist_1_joint                 0.0000        -10.0034        -10.0034
-wrist_2_joint                 0.0000          4.0404          4.0404
-wrist_3_joint                -0.0000          0.0000          0.0000
+shoulder_pan_joint            0.0000          1.0667          1.0667
+shoulder_lift_joint          -0.0000         30.6991         30.6991
+elbow_joint                  -0.0000        -55.1480        -55.1480
+wrist_1_joint                -0.0000        -16.6128        -16.6128
+wrist_2_joint                 0.0000         35.4398         35.4398
+wrist_3_joint                 0.0000        -28.6313        -28.6313
 
 JOINT LIMIT ANALYSIS
 --------------------------------------------------------------------------------
 Category                                                                  Joints
 --------------------------------------------------------------------------------
-Joints near torque limits (>90%)                                            None
+Joints near torque limits (>90%)                      shoulder_pan_joint (99.2%)
 Torque limit violations                                                     None
 
 ================================================================================

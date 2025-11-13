@@ -12,11 +12,12 @@ from orc.utils.robot_wrapper import RobotWrapper
 from orc.utils.robot_simulator import RobotSimulator
 from orc.utils.viz_utils import addViewerSphere, applyViewerConfiguration
 
-from utility import extract_solution, save_tracking_summary
-from plotting_utility import plot_infinity, plot_result
+from utility.utility import extract_solution, save_tracking_summary
+from utility.plotting import plot_infinity, plot_result
+
 from track_path import running_cost_and_dynamics, terminal_cost_and_constraints, cyclic_terminal_cost_and_constraints
 from track_trajectory import hard_cyclic_trajectory_tracking, soft_cyclic_trajectory_tracking
-
+from ocp_formulations.min_time_formulation import min_time_path_tracking
 
 # ====================== Robot and Dynamics Setup ======================
 robot = load("ur5")
@@ -24,7 +25,10 @@ joints_name_list = [s for s in robot.model.names[1:]]
 nq = len(joints_name_list)                                  # nq = number of joints
 nx = 2 * nq                                                 # nx = state space dimension, a joint state x = [q, dq], 2 variable for each joint
 
-dt = 0.02                                                   # dt = time step
+# dt = 0.02                                                   # dt = time step
+dt_min = 0.001
+dt_max = 0.1
+
 N = 100                                                     # N = number of steps
 q0 = np.zeros(nq)
 dq0 = np.zeros(nq)
@@ -84,7 +88,7 @@ def create_decision_variables(N, nx, nu, lbx, ubx):
 
 
 def create_and_solve_ocp(N, nx, nq, lbx, ubx, dt, x_init,
-                         c_path, r_path, w_v, w_a, w_w, w_final, w_p,
+                         c_path, r_path, w_v, w_a, w_w, w_final, w_p, w_time,
                          tau_min, tau_max):
     opti, X, U, S, W = create_decision_variables(N, nx, nq, lbx, ubx)
 
@@ -105,9 +109,17 @@ def create_and_solve_ocp(N, nx, nq, lbx, ubx, dt, x_init,
     #                                   c_path, r_path, w_v, w_a, w_final, w_p, 
     #                                   nq, f, fk, inv_dyn, tau_min, tau_max )
     # Soft Contraint 
+    '''
     total_cost = soft_cyclic_trajectory_tracking(opti, X, U, S, N, dt, x_init, 
                                        c_path, r_path, w_v, w_a, w_final, w_p, 
                                        nq, f, fk, inv_dyn, tau_min, tau_max )
+    opti.minimize(total_cost)
+    '''
+
+    # Q4
+    total_cost = min_time_path_tracking(opti, X, U, S, W, N, dt_min, dt_max, x_init, c_path, 
+                                        r_path, w_v, w_a, w_w, w_final, w_time, nq, f, fk, inv_dyn, 
+                                        tau_min, tau_max)
     opti.minimize(total_cost)
 
     opts = {"ipopt.print_level": 0, "print_time": 0, "ipopt.tol": 1e-4}
@@ -152,18 +164,30 @@ if __name__ == "__main__":
     
     input("Press ENTER to continue...")
 
+    # w_v = Weight Joint Velocity Cost
+    # w_a = Weight Input Torque Cost
+    # w_w = Weight Path Cost
+    # w_final = Weight Final Configuration Cost
+    # w_p = Weight Trajectory Error Cost ( EE Psition Error )
+    # w_time = Weight Min Time Cost
+    
+    # Q1, Q2
+    # log_w_v, log_w_a, log_w_w, log_w_final = -3, -3, -2, 0
+    # log_w_p = 2 #Log of trajectory tracking cost  # Q3
 
-    log_w_v, log_w_a, log_w_w, log_w_final = -3, -3, -2, 0
-    log_w_p = 2 #Log of trajectory tracking cost 
+    # Q4
+    log_w_p, log_w_v, log_w_a, log_w_w, log_w_final = 2, -6, -6, -6, -6
+    log_w_time = -1
+    
 
 
     sol, X, U, S, W , solver_timer = create_and_solve_ocp(
         N, nx, nq, lbx, ubx, dt, x_init, c_path, r_path,
         10**log_w_v, 10**log_w_a, 10**log_w_w, 10**log_w_final,
-        10**log_w_p, tau_min, tau_max
+        10**log_w_p, 10**log_w_time, tau_min, tau_max
     )
 
-    q_sol, dq_sol, u_sol, tau, ee, ee_des, s_sol, w_sol = extract_solution(
+    q_sol, dq_sol, u_sol, tau, ee, ee_des, s_sol, w_sol, dt_sol = extract_solution(
         sol, X, U, S, W, N, dt, nq, c_path, r_path, inv_dyn, fk 
     )
 
@@ -171,9 +195,9 @@ if __name__ == "__main__":
     display_motion(q_sol, ee_des)
 
     # Plot results
-    save_path = './results/Q3/soft_constraint'
-    plot_result(N, dt, s_sol, ee_des, ee, dq_sol, q_sol, tau, w_sol, save_dir = save_path, marker_size=12)
+    save_path = './results/Q4/path_tracking'
+    plot_result(N, dt_sol, s_sol, ee_des, ee, dq_sol, q_sol, tau, w_sol, save_dir = save_path, marker_size=12)
 
     # Summary results
     filename = save_path + '/summary.txt'
-    save_tracking_summary(q_sol, tau, ee, ee_des, s_sol, dt, N, solver_timer, joints_name_list, tau_min, tau_max, filename)
+    save_tracking_summary(q_sol, tau, ee, ee_des, s_sol, dt_sol, N, solver_timer, joints_name_list, tau_min, tau_max, filename)
