@@ -4,10 +4,13 @@ Main entry point for robot path tracking experiments.
 Run with: python main.py [--experiment Q1|Q2|Q3|Q4|all] [--no-viz]
 """
 import argparse
-import sys
 from pathlib import Path
 
-from experiments import run_q1, run_q2, run_q3, run_q4
+from experiments.Q1 import run_q1 
+from experiments.Q2 import run_q2
+from experiments.Q3 import run_q3
+from experiments.Q4 import run_q4
+
 from utility.plotting import plot_infinity
 
 
@@ -16,10 +19,10 @@ def parse_arguments():
         description='UR5 Robot Path Tracking Experiments',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Examples:
-  python main.py --experiment Q1          # Run experiment Q1 only
-  python main.py --experiment all         # Run all experiments
-  python main.py --experiment Q3 --no-viz # Run Q3 without visualization
+        Examples:
+        python main.py --experiment Q1          # Run experiment Q1 only
+        python main.py --experiment all         # Run all experiments
+        python main.py --experiment Q3 --no-viz # Run Q3 without visualization
         """
     )
     
@@ -66,7 +69,7 @@ def main():
         'Q1': ('Q1: Path Tracking without Terminal Cost', run_q1),
         'Q2': ('Q2: Path Tracking with Cyclic Terminal Cost', run_q2),
         'Q3': ('Q3: Cyclic Trajectory Tracking (Hard & Soft Constraints)', run_q3),
-        'Q4': ('Q4: Minimum Time Path Tracking', run_q4)
+        'Q4': ('Q4: Minimum Time Path & Trajectory Tracking', run_q4)
     }
     
     # Determine which experiments to run
