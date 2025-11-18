@@ -31,7 +31,7 @@ def run_q4(visualize=True, plot_results=True):
     w_a = 10**-6
     w_w = 10**-6
     w_final = 10**-6
-    w_time = 10**-1    
+    w_time = 10**1   
     
     dt_min = 0.001
     dt_max = 0.1
@@ -77,7 +77,7 @@ def run_q4(visualize=True, plot_results=True):
                                  robot_setup.tau_max)
     opti.minimize(ocp)
 
-    opts = {"ipopt.print_level": 0, "print_time": 0, "ipopt.tol": 1e-4}
+    opts = {"ipopt.print_level": 0, "print_time": 0, "ipopt.tol": 1e-4, "ipopt.hessian_approximation":"limited-memory"}
     opti.solver("ipopt", opts)
 
     t0 = time.time()
@@ -91,7 +91,7 @@ def run_q4(visualize=True, plot_results=True):
     )
     
     # Plot results
-    save_path = f'./results/Q4'
+    save_path = f'./results/Q4/path_tracking'
     Path(save_path).mkdir(parents=True, exist_ok=True)
     
     if plot_results:
@@ -114,7 +114,7 @@ def run_q4(visualize=True, plot_results=True):
 
 
 
-    '''======================= TRAJECTORY TRACKING OCP FORMULATION ======================= 
+    '''======================= TRAJECTORY TRACKING OCP FORMULATION ======================='''
     print("\n======================= TRAJECTORY TRACKING OCP FORMULATION =======================")
     # Formulation of the OCP for trajectory tracking with minimum time
     # Create the Optimal Controll SOlver
@@ -192,7 +192,6 @@ def run_q4(visualize=True, plot_results=True):
         viewer.display(q_sol, ee_des, N, dt_sol)
     
     print(f"\nResults saved to: {save_path}")
-    '''
 
 
 
@@ -315,11 +314,11 @@ def min_time_path_tracking(opti, X, U, S, W, N, dt, x_init,
     
     # terminal cost that penalizes the distance between the initial and final state
     # - w_final*∥x(N) - x_init∥^2
-    cost += w_final * cs.sumsqr(X[-1] - x_init) 
+    cost += w_final * cs.sumsqr(X[-1] - X[0]) 
 
     # Min Time Step Cost
     # - w_time*dt
-    cost += w_time * dt**2
+    cost += w_time * (dt**2)
         
     return cost
 
@@ -441,7 +440,7 @@ def min_time_trajectory_tracking(opti, X, U, S, N, dt, x_init,
 
     # Min Time Step Cost
     # - w_time*dt^2
-    cost += w_time * dt**2
+    cost += w_time * (dt**2)
         
     return cost
 
