@@ -11,7 +11,7 @@ Number of time steps                                 100          -
 Time step size                                  0.020000          s
 Number of joints                                       6          -
 Path completion                                   1.0000          -
-Solver Time                                       1.1655          s
+Solver Time                                       1.2204          s
 
 
 END-EFFECTOR TRACKING PERFORMANCE
