@@ -31,7 +31,7 @@ def run_q4(visualize=True, plot_results=True):
     w_a = 10**-6
     w_w = 10**-6
     w_final = 10**-6
-    w_time = 10**1   
+    w_time = 10**-1   
     
     dt_min = 0.001
     dt_max = 0.1
@@ -198,9 +198,9 @@ def run_q4(visualize=True, plot_results=True):
 
 
 #                 N-1
-#     min          ∑   ( w_v*∥dq_k∥^2 + w_a∥u_k∥^2 + w_w∥w_k∥^2 ) * dt     +     w_final*∥x(N) - x_init∥^2    +   w_time*dt^2
-#  X,U,S,W,dt     k=0
-#               |--------------------- Running Cost ------------------|       |------ Terminal Cost -----|  |--Min Time Cost --!
+#     min          ∑   ( w_v*∥dq_k∥^2 + w_a∥u_k∥^2 + w_w∥w_k∥^2 ) * dt +   w_time*dt^2     +     w_final*∥x(N) - x_init∥^2    
+#  X,U,S,W,dt     k=0                                                 |-Min Time Cost-|
+#               |--------------------- Running Cost ----------------------------------|        |------ Terminal Cost -----|  
 #
 # subject to    - q_k+1 = q_k + dt*dq_k , dq_k+1 = dq_k + dt*u_k      ∀k ∈[0,N −1]
 #               - q_min <= q_k <= q_max,  dq_max <= dq_k <= dq_max    ∀k ∈[1,N]
@@ -298,6 +298,11 @@ def min_time_path_tracking(opti, X, U, S, W, N, dt, x_init,
         tau_k = inv_dyn(X[k], U[k]) 
         opti.subject_to(opti.bounded(tau_min, tau_k, tau_max))
 
+
+        # Min Time Step RUNNING Cost
+        # - w_time*dt^2
+        cost += w_time * (dt**2)
+
     
     # Compute the end-effector position at the final state
     q_N = X[-1][0:nq]   # get final joint positions from X[-1]
@@ -316,9 +321,9 @@ def min_time_path_tracking(opti, X, U, S, W, N, dt, x_init,
     # - w_final*∥x(N) - x_init∥^2
     cost += w_final * cs.sumsqr(X[-1] - X[0]) 
 
-    # Min Time Step Cost
+    # Min Time Step TERMINAL Cost
     # - w_time*dt
-    cost += w_time * (dt**2)
+    # cost += w_time * (dt**2)
         
     return cost
 
@@ -329,13 +334,13 @@ def min_time_path_tracking(opti, X, U, S, W, N, dt, x_init,
 
 
 #                 N-1
-#     min          ∑   ( w_v*∥dq_k∥^2 + w_a∥u_k∥^2 + w_p*∥y_q - p_s∥^2 ) * dt     +  ...    
+#     min          ∑   ( w_v*∥dq_k∥^2 + w_a∥u_k∥^2 + w_p*∥y_q - p_s∥^2 ) * dt +   w_time*dt^2    +  ...    
 #    X,U,dt       k=0
 #               |------------------------------ Running Cost -----------------------------|    
 # 
-#            ...  dt*w_p*∥y(q_N) - p(s_N)∥^2 + w_final*∥x(N) - x_init∥^2    +   w_time*dt^2
+#            ...  dt*w_p*∥y(q_N) - p(s_N)∥^2 + w_final*∥x(N) - x_init∥^2    
 #
-#               |--------------------- Terminal Cost -------------------|  |--Min Time Cost --!
+#               |--------------------- Terminal Cost -------------------| 
 #
 # subject to    - q_k+1 = q_k + dt*dq_k , dq_k+1 = dq_k + dt*u_k      ∀k ∈[0,N −1]
 #               - q_min <= q_k <= q_max,  dq_max <= dq_k <= dq_max    ∀k ∈[1,N]
@@ -417,6 +422,11 @@ def min_time_trajectory_tracking(opti, X, U, S, N, dt, x_init,
         tau_k = inv_dyn(X[k], U[k]) 
         opti.subject_to(opti.bounded(tau_min, tau_k, tau_max))
 
+
+        # Min Time Step RUNNING Cost
+        # - w_time*dt^2
+        cost += w_time * (dt**2)
+
     
     # Compute the end-effector position at the final state
     q_N = X[-1][0:nq]   # get final joint positions from X[-1]
@@ -438,9 +448,9 @@ def min_time_trajectory_tracking(opti, X, U, S, N, dt, x_init,
     # - w_final*∥x(N) - x_init∥^2
     cost += w_final * cs.sumsqr(X[-1] - x_init) 
 
-    # Min Time Step Cost
+    # Min Time Step TERMINAL Cost
     # - w_time*dt^2
-    cost += w_time * (dt**2)
+    # cost += w_time * (dt**2)
         
     return cost
 

@@ -11,7 +11,7 @@ Number of time steps                                 100          -
 Time step size                                  0.001000          s
 Number of joints                                       6          -
 Path completion                                   1.0000          -
-Solver Time                                       1.6464          s
+Solver Time                                       1.4932          s
 
 
 END-EFFECTOR TRACKING PERFORMANCE
@@ -35,11 +35,11 @@ Mean absolute joint error                         8.4298        deg
 Per-Joint Configuration Error:
 Joint Name             Initial [deg]     Final [deg]     Error [deg]
 --------------------------------------------------------------------------------
-shoulder_pan_joint            0.0000         -0.0784         -0.0784
-shoulder_lift_joint          -0.0000         -4.9900         -4.9900
-elbow_joint                  -0.0000         13.8110         13.8110
-wrist_1_joint                 0.0000         11.1556         11.1556
-wrist_2_joint                 0.0000        -13.3355        -13.3355
+shoulder_pan_joint           -0.0000         -0.0784         -0.0784
+shoulder_lift_joint           0.0000         -4.9900         -4.9900
+elbow_joint                   0.0000         13.8110         13.8110
+wrist_1_joint                -0.0000         11.1556         11.1556
+wrist_2_joint                -0.0000        -13.3355        -13.3355
 wrist_3_joint                -0.0000         -7.2084         -7.2084
 
 JOINT LIMIT ANALYSIS
