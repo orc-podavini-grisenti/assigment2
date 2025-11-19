@@ -6,12 +6,12 @@ GENERAL INFORMATION
 --------------------------------------------------------------------------------
 Metric                                             Value       Unit
 --------------------------------------------------------------------------------
-Total trajectory time                             1.2016          s
+Total trajectory time                             1.2014          s
 Number of time steps                                 100          -
-Time step size                                  0.011897          s
+Time step size                                  0.011896          s
 Number of joints                                       6          -
 Path completion                                   1.0000          -
-Solver Time                                       5.4579          s
+Solver Time                                       5.2355          s
 
 
 END-EFFECTOR TRACKING PERFORMANCE
@@ -29,24 +29,24 @@ CYCLIC MOTION ANALYSIS (Initial vs Final Configuration)
 --------------------------------------------------------------------------------
 Metric                                             Value       Unit
 --------------------------------------------------------------------------------
-Total joint error (norm)                        184.2145        deg
-Mean absolute joint error                        43.6780        deg
+Total joint error (norm)                        183.8078        deg
+Mean absolute joint error                        43.2595        deg
 
 Per-Joint Configuration Error:
 Joint Name             Initial [deg]     Final [deg]     Error [deg]
 --------------------------------------------------------------------------------
-shoulder_pan_joint            0.0000          0.6790          0.6790
-shoulder_lift_joint           0.0000        -10.0674        -10.0674
-elbow_joint                  -0.0000         45.8172         45.8172
-wrist_1_joint                -0.0000        175.9042        175.9042
-wrist_2_joint                 0.0000        -28.0963        -28.0963
-wrist_3_joint                 0.0000         -1.5042         -1.5042
+shoulder_pan_joint            0.0000          0.6678          0.6678
+shoulder_lift_joint           0.0000         -9.8878         -9.8878
+elbow_joint                  -0.0000         45.5338         45.5338
+wrist_1_joint                -0.0000        175.6065        175.6065
+wrist_2_joint                 0.0000        -27.8593        -27.8593
+wrist_3_joint                -0.0000         -0.0019         -0.0019
 
 JOINT LIMIT ANALYSIS
 --------------------------------------------------------------------------------
 Category                                                                  Joints
 --------------------------------------------------------------------------------
-Joints near torque limits (>90%)                      shoulder_pan_joint (95.0%)
+Joints near torque limits (>90%)                      shoulder_pan_joint (95.1%)
 Torque limit violations                                                     None
 
 ================================================================================

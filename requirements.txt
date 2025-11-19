@@ -1,0 +1,15 @@
+numpy<2
+matplotlib
+casadi==3.7.2
+example-robot-data
+example-robot-data-loaders
+adam-robotics[casadi]==0.3.0
+tsid
+meshcat
+quadprog
+
+# Low-level dependencies required by robotics libraries
+cmeel-boost==1.89.0
+cmeel-urdfdom==4.0.0
+cmeel-assimp==6.0.2
+eigenpy>=3.12,<4

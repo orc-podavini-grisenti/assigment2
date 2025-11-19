@@ -6,6 +6,32 @@ This project implements optimal control formulations for path and trajectory tra
 
 The experiments use CasADi for optimal control problem formulation and solving, with visualization and result plotting capabilities.
 
+## Installation
+1. Create a python 3.10 enviroment and activate it
+```bash
+python3.10 -m venv myenv
+myenv\Scripts\activate    #Windows
+source myenv/bin/activate #Mac/Ubuntu
+```
+
+2. Install requirements
+```bash
+sudo apt install python3-numpy python3-scipy python3-matplotlib curl
+
+sudo mkdir -p /etc/apt/keyrings
+
+curl http://robotpkg.openrobots.org/packages/debian/robotpkg.asc
+
+echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/robotpkg.asc] http://robotpkg.openrobots.org/packages/debian/pub $(lsb_release -cs) robotpkg"
+
+sudo apt update
+
+sudo apt install robotpkg-py310-pinocchio robotpkg-py310-example-robot-data robotpkg-urdfdom robotpkg-py310-qt5-gepetto-viewer-corba robotpkg-py310-quadprog robotpkg-py310-tsid
+
+pip install adam-robotics[casadi] meshcat
+pip install -r requirements.txt
+```
+
 
 ## Running the Experiments
 **Q1: Path Tracking without Terminal Cost**

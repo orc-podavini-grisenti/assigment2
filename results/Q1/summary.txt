@@ -11,7 +11,7 @@ Number of time steps                                 100          -
 Time step size                                  0.020000          s
 Number of joints                                       6          -
 Path completion                                   1.0000          -
-Solver Time                                       3.9745          s
+Solver Time                                       6.5604          s
 
 
 END-EFFECTOR TRACKING PERFORMANCE
@@ -40,7 +40,7 @@ shoulder_lift_joint           0.0000         20.7861         20.7861
 elbow_joint                   0.0000        -41.4927        -41.4927
 wrist_1_joint                 0.0000          3.8921          3.8921
 wrist_2_joint                -0.0000         19.8499         19.8499
-wrist_3_joint                -0.0000         -0.0000         -0.0000
+wrist_3_joint                 0.0000         -0.0000         -0.0000
 
 JOINT LIMIT ANALYSIS
 --------------------------------------------------------------------------------
