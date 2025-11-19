@@ -143,6 +143,8 @@ def run_q4(visualize=True, plot_results=True):
 
     # Time Step Boundary Constraints
     # - dt_min <= dt <= dt_max
+    # FIX THE LOWER BOUND OF d_t
+    dt_min = 0.01
     opti.subject_to( opti.bounded(dt_min, dt, dt_max))
 
     # OCP Formulation
